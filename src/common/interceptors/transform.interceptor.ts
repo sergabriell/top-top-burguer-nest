@@ -1,33 +1,42 @@
-import {
-  Injectable,
-  NestInterceptor,
-  ExecutionContext,
-  CallHandler,
-  HttpStatus,
-} from '@nestjs/common';
+import { Injectable, NestInterceptor, ExecutionContext, CallHandler } from '@nestjs/common';
 import { Observable } from 'rxjs';
 import { map } from 'rxjs/operators';
-import { ApiResponseDto } from '../dto/api-response.dto';
 
 @Injectable()
-export class TransformInterceptor<T>
-  implements NestInterceptor<T, ApiResponseDto<T>>
-{
-  intercept(
-    context: ExecutionContext,
-    next: CallHandler,
-  ): Observable<ApiResponseDto<T>> {
+export class TransformInterceptor implements NestInterceptor {
+  intercept(context: ExecutionContext, next: CallHandler): Observable<any> {
     return next.handle().pipe(
-      map((result) => {
-        const response = context.switchToHttp().getResponse();
-        
-        const statusCode = response.statusCode || HttpStatus.OK;
-        let message = 'Operação realizada com sucesso';
-        
-        if (statusCode === HttpStatus.CREATED) {
-            message = 'Recurso criado com sucesso';
+      map((response) => {
+        const httpContext = context.switchToHttp();
+        const res = httpContext.getResponse();
+        const statusCode = res.statusCode;
+        const totalItems = response.total || 0;
+        const itemsPerPage = response.limit || 10;
+        const currentPage = response.page || 1;
+
+        const isPaginated = response && response.data && typeof response.total !== 'undefined';
+
+        if (isPaginated) {
+          return {
+            status: statusCode,
+            message: 'Listagem realizada com sucesso',
+            result: response.data,
+            meta: {
+              totalItems: totalItems,
+              itemsPerPage: itemsPerPage,
+              currentPage: Number(currentPage),
+              totalPages: Math.ceil(totalItems / itemsPerPage),
+            },
+            timestamp: new Date().toISOString(),
+          };
         }
-        return new ApiResponseDto<T>(result, message, statusCode);
+
+        return {
+          status: statusCode,
+          message: 'Operação realizada com sucesso',
+          result: response,
+          timestamp: new Date().toISOString(),
+        };
       }),
     );
   }

@@ -1,13 +1,14 @@
-import { Body, Controller, Get, Param, ParseIntPipe, Post, Put } from '@nestjs/common';
+import { Body, Controller, Get, Param, ParseIntPipe, Post, Put, Query } from '@nestjs/common';
 import { UsersRoleService } from './users-role.service';
+import { FilterRoleDto } from 'src/common/dto/users/input/filter-role.dto';
 
 @Controller('users-role')
 export class UsersRoleController {
     constructor(private readonly usersRoleService: UsersRoleService) {}
 
     @Get()
-    async getAllRoles() {
-        return this.usersRoleService.getAllRoles();
+    async getAllRoles(@Query() query: FilterRoleDto) {
+        return this.usersRoleService.getAllRoles(query);
     }
 
     @Get(':id')

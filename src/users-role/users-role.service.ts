@@ -2,15 +2,35 @@ import { Injectable } from '@nestjs/common';
 import { DbService } from 'src/db/db.service';
 import { RoleAlreadyExistsException } from './exceptions/role-already-exists.exception';
 import { RoleNotFoundException } from './exceptions/role-not-found.exception';
+import { FilterRoleDto } from 'src/common/dto/users/input/filter-role.dto';
+import { Prisma } from 'generated/prisma/client';
 
 @Injectable()
 export class UsersRoleService {
     constructor(private readonly dbService: DbService) {}
 
-    async getAllRoles() {
+    async getAllRoles(query?: FilterRoleDto) {
         try {
-            return await this.dbService.userRole.findMany();
+            const { name, id } = query || {};
+            const page = query?.page || 1;
+            const limit = query?.limit || 10;
+            const where: Prisma.UserRoleWhereInput = {
+                ...(name && { name: { contains: name, mode: 'insensitive' } }),
+                ...(id && { id }),
+            };
+            const skip = (page - 1) * limit;
 
+
+            const [data, total] = await Promise.all([
+                this.dbService.userRole.findMany({
+                    where,
+                    skip,
+                    take: limit,
+                }),
+                this.dbService.userRole.count({ where }),
+            ]); 
+
+            return { data, total, page, limit };
         } catch (error) {
             throw error;
         }
