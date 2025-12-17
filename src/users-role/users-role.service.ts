@@ -4,6 +4,7 @@ import { RoleAlreadyExistsException } from './exceptions/role-already-exists.exc
 import { RoleNotFoundException } from './exceptions/role-not-found.exception';
 import { FilterRoleDto } from 'src/common/dto/users/input/filter-role.dto';
 import { Prisma } from 'generated/prisma/client';
+import { QueryBuilder } from 'src/common/utils/query-builder.util';
 
 @Injectable()
 export class UsersRoleService {
@@ -11,35 +12,26 @@ export class UsersRoleService {
 
     async getAllRoles(query?: FilterRoleDto) {
         try {
-            const { name, id, sort } = query || {};
-            const page = query?.page || 1;
-            const limit = query?.limit || 10;
+            const { skip, take, page, size } = QueryBuilder.formatPagination(query);
+
+            const orderBy = QueryBuilder.formatOrder(query?.sort || '', ['id', 'name', 'createdAt']);
+
             const where: Prisma.UserRoleWhereInput = {
-                ...(name && { name: { contains: name, mode: 'insensitive' } }),
-                ...(id && { id: Number(id) }),
+                ...(query?.name && { name: { contains: query.name, mode: 'insensitive' } }),
+                ...(query?.id && { id: Number(query.id) }),
             };
-            const skip = (page - 1) * limit;
-
-            let orderBy: any = { id: 'asc' };
-
-            if (sort) {
-                const [field, direction] = sort.split(',');
-                const order = (direction?.toLowerCase() === 'desc') ? 'desc' : 'asc';
-                orderBy = { [field]: order };
-            }
-
 
             const [data, total] = await Promise.all([
                 this.dbService.userRole.findMany({
                     where,
                     skip,
-                    take: limit,
+                    take,
                     orderBy,
                 }),
                 this.dbService.userRole.count({ where }),
-            ]); 
+            ]);
 
-            return { data, total, page, limit };
+            return { data, total, page, size };
         } catch (error) {
             throw error;
         }

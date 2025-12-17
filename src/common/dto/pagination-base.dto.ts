@@ -11,7 +11,7 @@ export class PaginationBaseDto {
   @IsOptional()
   @Type(() => Number)
   @IsInt()
-  limit?: number = 10;
+  size?: number = 10;
 
   @IsOptional()
   @IsString()

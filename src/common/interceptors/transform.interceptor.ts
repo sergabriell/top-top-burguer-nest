@@ -11,7 +11,7 @@ export class TransformInterceptor implements NestInterceptor {
         const res = httpContext.getResponse();
         const statusCode = res.statusCode;
         const totalItems = response.total || 0;
-        const itemsPerPage = response.limit || 10;
+        const itemsPerPage = response.size || 10;
         const currentPage = response.page || 1;
 
         const isPaginated = response && response.data && typeof response.total !== 'undefined';
