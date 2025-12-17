@@ -16,7 +16,7 @@ export class UsersRoleService {
             const limit = query?.limit || 10;
             const where: Prisma.UserRoleWhereInput = {
                 ...(name && { name: { contains: name, mode: 'insensitive' } }),
-                ...(id && { id }),
+                ...(id && { id: Number(id) }),
             };
             const skip = (page - 1) * limit;
 
