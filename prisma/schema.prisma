@@ -1,0 +1,56 @@
+generator client {
+  provider = "prisma-client"
+  output   = "../generated/prisma"
+  moduleFormat    = "cjs"
+}
+
+datasource db {
+  provider = "postgresql"
+}
+
+model User {
+  id               Int        @id @default(autoincrement())
+  name             String     @unique
+  email            String     @unique
+  password         String
+  status           Boolean    @default(true)
+  telephone        String?
+  picturePath      String?    @map("picture_path")
+  pictureFileName  String?    @map("picture_file_name")
+
+  userGroups       UserGroup[]
+
+  createdAt        DateTime   @default(now()) @map("created_at")
+  updatedAt        DateTime   @updatedAt      @map("updated_at")
+
+  @@map("users")
+}
+
+model UserGroup {
+  id          Int        @id @default(autoincrement())
+  name        String     @unique
+  observation String?
+  admin       Boolean    @default(false)
+  status      Boolean    @default(true)
+
+  users       User[]
+  roles       UserRole[]
+
+  createdAt   DateTime   @default(now()) @map("created_at")
+  updatedAt   DateTime   @updatedAt      @map("updated_at")
+
+  @@map("user_group")
+}
+
+model UserRole {
+  id        Int        @id @default(autoincrement())
+  name      String     @unique
+  label     String
+
+  userGroups UserGroup[]
+
+  createdAt DateTime   @default(now()) @map("created_at")
+  updatedAt DateTime   @updatedAt      @map("updated_at")
+
+  @@map("user_role")
+}
