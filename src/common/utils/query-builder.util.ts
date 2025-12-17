@@ -1,4 +1,4 @@
-import { Prisma } from "generated/prisma/client";
+import { Prisma } from 'generated/prisma/client';
 
 export interface PaginatedResult<T> {
   data: T[];
@@ -22,7 +22,7 @@ export class QueryBuilder {
     if (!sort) return defaultOrder;
 
     const [field, direction] = sort.split(',');
-    
+
     const order: Prisma.SortOrder = direction?.toLowerCase() === 'desc' ? 'desc' : 'asc';
 
     if (allowedFields.includes(field)) {
