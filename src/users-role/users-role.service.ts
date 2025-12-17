@@ -11,7 +11,7 @@ export class UsersRoleService {
 
     async getAllRoles(query?: FilterRoleDto) {
         try {
-            const { name, id } = query || {};
+            const { name, id, sort } = query || {};
             const page = query?.page || 1;
             const limit = query?.limit || 10;
             const where: Prisma.UserRoleWhereInput = {
@@ -20,12 +20,21 @@ export class UsersRoleService {
             };
             const skip = (page - 1) * limit;
 
+            let orderBy: any = { id: 'asc' };
+
+            if (sort) {
+                const [field, direction] = sort.split(',');
+                const order = (direction?.toLowerCase() === 'desc') ? 'desc' : 'asc';
+                orderBy = { [field]: order };
+            }
+
 
             const [data, total] = await Promise.all([
                 this.dbService.userRole.findMany({
                     where,
                     skip,
                     take: limit,
+                    orderBy,
                 }),
                 this.dbService.userRole.count({ where }),
             ]); 
